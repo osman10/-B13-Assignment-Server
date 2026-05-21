@@ -23,6 +23,7 @@ async function run() {
   try {
     await client.connect();
     await client.db("Tutorfinder").command({ ping: 1 });
+    console.log("Connected to MongoDB successfully!");
 
     // Get all tutors
     app.get("/tutors", async (req, res) => {
@@ -84,5 +85,8 @@ app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 
+// app.listen(process.env.PORT || 5000, () => {
+//   console.log(`Server is running on port ${process.env.PORT || 5000}`);
+// });
 // Export app for Vercel serverless
 module.exports = app;
