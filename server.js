@@ -1,10 +1,13 @@
 // server.js
 require("dotenv").config();
 const express = require("express");
+
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(express.json());
+const cors = require('cors');
+app.use(cors());
 
 // Global client for serverless reuse
 let client;
@@ -16,6 +19,7 @@ function getClient() {
       serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
     });
     clientPromise = client.connect();
+    
   }
   return clientPromise;
 }
@@ -71,6 +75,10 @@ app.post("/bookings", async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+});
+
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Server is running on port ${process.env.PORT || 5000}`);
 });
 
 module.exports = app;
