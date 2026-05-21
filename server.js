@@ -1,92 +1,76 @@
+// server.js
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const { ObjectId } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-// middleware
 app.use(express.json());
 
-// MongoDB connection
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = process.env.MONGODB_URI;
+// Global client for serverless reuse
+let client;
+let clientPromise;
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+function getClient() {
+  if (!client) {
+    client = new MongoClient(process.env.MONGODB_URI, {
+      serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
+    });
+    clientPromise = client.connect();
   }
-});
-
-// Run function to handle DB
-async function run() {
-  try {
-    await client.connect();
-    await client.db("Tutorfinder").command({ ping: 1 });
-    console.log("Connected to MongoDB successfully!");
-
-    // Get all tutors
-    app.get("/tutors", async (req, res) => {
-      const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-
-      const result = await tutorsCollection
-        .find()
-        .sort({ _id: -1 })
-        .limit(6)
-        .toArray();
-
-      res.json(result);
-    });
-
-    // Get single tutor by ID
-    app.get("/tutors/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-        const result = await tutorsCollection.findOne({ _id: new ObjectId(id) });
-        res.json(result);
-      } catch (error) {
-        res.status(500).json({ message: "Failed to get tutor", error: error.message });
-      }
-    });
-
-    // Add a new tutor
-    app.post("/addtutor", async (req, res) => {
-      try {
-        const tutorData = req.body;
-        const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-        const result = await tutorsCollection.insertOne(tutorData);
-        res.json({ success: true, message: "Tutor added successfully", insertedId: result.insertedId });
-      } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to add tutor", error: error.message });
-      }
-    });
-
-    // Post booking data
-    app.post("/bookings", async (req, res) => {
-      try {
-        const bookingData = req.body;
-        const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
-        const result = await bookingsCollection.insertOne(bookingData);
-        res.json(result);
-      } catch (error) {
-        res.status(500).json({ message: "Failed to create booking", error: error.message });
-      }
-    });
-
-  } finally {
-    // Do not close client here—serverless keeps it alive
-  }
+  return clientPromise;
 }
-run().catch(console.dir);
 
 // Root route
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 
-// app.listen(process.env.PORT || 5000, () => {
-//   console.log(`Server is running on port ${process.env.PORT || 5000}`);
-// });
-// Export app for Vercel serverless
+// Get all tutors
+app.get("/tutors", async (req, res) => {
+  try {
+    await getClient();
+    const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
+    const tutors = await tutorsCollection.find().sort({ _id: -1 }).limit(6).toArray();
+    res.json(tutors);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get tutor by ID
+app.get("/tutors/:id", async (req, res) => {
+  try {
+    await getClient();
+    const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
+    const tutor = await tutorsCollection.findOne({ _id: new ObjectId(req.params.id) });
+    res.json(tutor);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Add tutor
+app.post("/addtutor", async (req, res) => {
+  try {
+    await getClient();
+    const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
+    const result = await tutorsCollection.insertOne(req.body);
+    res.json({ success: true, insertedId: result.insertedId });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Add booking
+app.post("/bookings", async (req, res) => {
+  try {
+    await getClient();
+    const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
+    const result = await bookingsCollection.insertOne(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = app;
