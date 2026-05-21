@@ -24,59 +24,93 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("Tutorfinder").command({ ping: 1 });
+    // await client.db("Tutorfinder").command({ ping: 1 });
 
 
 
-    // get all tutors
-    app.get("/tutors", async (req, res) => {
-      const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-      const result = await tutorsCollection.find().limit(6).toArray();
-      res.send(result);
-    });
 
+// get all tutors in reverse order
+app.get("/tutors", async (req, res) => {
+  const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
 
-// Get single tutor by ID
-app.get("/tutors/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
+  const result = await tutorsCollection
+    .find()
+    .sort({ _id: -1 }) // reverse order
+    .limit(6)
+    .toArray();
 
-    const tutorsCollection = client
-      .db("Tutorfinder")
-      .collection("Tutors");
-
-    const query = { _id: new ObjectId(id) };
-
-    const result = await tutorsCollection.findOne(query);
-
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({
-      message: "Failed to get tutor",
-      error: error.message,
-    });
-  }
+  res.send(result);
 });
 
+  
 
-//post booking data
-app.post("/bookings", async (req, res) => {
-  try {
-    const bookingData = req.body;
+    // Get single tutor by ID
+    app.get("/tutors/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
-    const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
+        const tutorsCollection = client
+          .db("Tutorfinder")
+          .collection("Tutors");
 
-    const result = await bookingsCollection.insertOne(bookingData);
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({
-      message: "Failed to create booking",
-      error: error.message,
+        const query = { _id: new ObjectId(id) };
+
+        const result = await tutorsCollection.findOne(query);
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          message: "Failed to get tutor",
+          error: error.message,
+        });
+      }
     });
-  }
-});
+
+
+    // add a new tutor
+    app.post("/addtutor", async (req, res) => {
+      try {
+        const tutorData = req.body;
+
+        const tutorsCollection = client
+          .db("Tutorfinder")
+          .collection("Tutors");
+
+        const result = await tutorsCollection.insertOne(tutorData);
+
+        res.send({
+          success: true,
+          message: "Tutor added successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (error) {
+        res.status(500).send({
+          success: false,
+          message: "Failed to add tutor",
+          error: error.message,
+        });
+      }
+    });
+
+
+    //post booking data
+    app.post("/bookings", async (req, res) => {
+      try {
+        const bookingData = req.body;
+
+        const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
+
+        const result = await bookingsCollection.insertOne(bookingData);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          message: "Failed to create booking",
+          error: error.message,
+        });
+      }
+    });
 
 
 
@@ -88,7 +122,7 @@ app.post("/bookings", async (req, res) => {
 
 
 
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -111,5 +145,5 @@ app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  // console.log(`Server running on port ${port}`);
 });
