@@ -81,6 +81,20 @@ app.post("/bookings", async (req, res) => {
   }
 });
 
+// get all bookings
+app.get("/bookings", async (req, res) => {
+  try {
+    await getClient();
+    const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
+    const bookings = await bookingsCollection.find().toArray();
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
 const port = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
