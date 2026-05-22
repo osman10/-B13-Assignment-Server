@@ -5,9 +5,54 @@ const express = require("express");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
+
+
+
+
+
+
+
+
+
+
+const cors = require("cors");
+
+const allowedOrigins = [
+  "https://b13-assignment-client.vercel.app",
+  "http://localhost:5173",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
+
+
+
+
+
 app.use(express.json());
-const cors = require('cors');
-app.use(cors());
+
+
+
+
+
+
+
+
 
 // Global client for serverless reuse
 let client;
@@ -77,8 +122,19 @@ app.post("/bookings", async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server is running on port ${process.env.PORT || 5000}`);
-});
+
+
+
+
+
+
+
+const port = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
 
 module.exports = app;
