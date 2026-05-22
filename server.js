@@ -5,54 +5,11 @@ const express = require("express");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-
-
-
-
-
-
-
-
-
-
 const cors = require("cors");
 
-const allowedOrigins = [
-  "https://b13-assignment-client.vercel.app",
-  "http://localhost:5173",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS not allowed"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
-
-
-
-
-
+app.use(cors());
 
 app.use(express.json());
-
-
-
-
-
-
-
-
 
 // Global client for serverless reuse
 let client;
@@ -121,13 +78,6 @@ app.post("/bookings", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-
-
-
-
-
-
 
 const port = process.env.PORT || 5000;
 
