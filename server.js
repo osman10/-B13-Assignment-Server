@@ -8,8 +8,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 
 app.use(cors());
-
 app.use(express.json());
+
+
+
 
 // Global client for serverless reuse
 let client;
