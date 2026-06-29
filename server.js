@@ -118,12 +118,12 @@ app.get("/bookings", async (req, res) => {
 
 
 
-const port = process.env.PORT || 5000;
+// const port = process.env.PORT || 5000;
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
-}
+// if (process.env.NODE_ENV !== "production") {
+//   app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+//   });
+// }
 
 module.exports = app;
