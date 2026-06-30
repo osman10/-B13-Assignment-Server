@@ -150,6 +150,70 @@ app.delete("/tutors/:id", verifyToken, async (req, res) => {
 });
 
 
+// Update tutor by ID
+app.patch("/tutors/:id", verifyToken, async (req, res) => {
+  try {
+    await getClient();
+
+    const tutorsCollection = client
+      .db("Tutorfinder")
+      .collection("Tutors");
+
+    const { id } = req.params;
+    const updatedData = req.body;
+
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid tutor id",
+      });
+    }
+
+
+    const result = await tutorsCollection.updateOne(
+      {
+        _id: new ObjectId(id),
+      },
+      {
+        $set: {
+          TutorName: updatedData.TutorName,
+          PhotoURL: updatedData.PhotoURL,
+          Subject: updatedData.Subject,
+          HourlyFee: Number(updatedData.HourlyFee),
+          TotalSlots: Number(updatedData.TotalSlots),
+          Available: updatedData.Available,
+          SessionStartDate: updatedData.SessionStartDate,
+          SessionEndDate: updatedData.SessionEndDate,
+          Institution: updatedData.Institution,
+          Experience: updatedData.Experience,
+          Location: updatedData.Location,
+          TeachingMode: updatedData.TeachingMode,
+          Description: updatedData.Description,
+        },
+      }
+    );
+
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: "Tutor not found",
+      });
+    }
+
+
+    res.status(200).json({
+      message: "Tutor updated successfully",
+      result,
+    });
+
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
 
 // Add tutor
 app.post("/addtutor", verifyToken, async (req, res) => {
