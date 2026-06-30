@@ -6,7 +6,6 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 const cors = require("cors");
-
 app.use(cors());
 app.use(express.json());
 
@@ -50,17 +49,21 @@ function getClient() {
   return clientPromise;
 }
 
-// Root route
-app.get("/", (req, res) => {
-  res.send("Server is running...");
-});
-
-// Get all tutors
-app.get("/tutors", async (req, res) => {
+// Get tutors
+app.get("/tutors",  async (req, res) => {
   try {
     await getClient();
-    const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-    const tutors = await tutorsCollection.find().sort({ _id: -1 }).limit(6).toArray();
+
+    const tutorsCollection = client
+      .db("Tutorfinder")
+      .collection("Tutors");
+
+    const tutors = await tutorsCollection
+      .find()
+      .sort({ _id: -1 })
+      .limit(6)
+      .toArray();
+
     res.json(tutors);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -68,7 +71,7 @@ app.get("/tutors", async (req, res) => {
 });
 
 // Get tutor by ID
-app.get("/tutors/:id", async (req, res) => {
+app.get("/tutors/:id", verifyToken, async (req, res) => {
   try {
     await getClient();
     const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
@@ -78,6 +81,74 @@ app.get("/tutors/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// Get tutors by userId;
+app.get("/tutors/user/:userId",verifyToken, async (req, res) => {
+  try {
+    await getClient();
+
+    const tutorsCollection = client
+      .db("Tutorfinder")
+      .collection("Tutors");
+
+    const { userId } = req.params;
+
+    const tutors = await tutorsCollection
+      .find({ userId })
+      .toArray();
+
+    res.status(200).json(tutors);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// Delete tutor by ID
+app.delete("/tutors/:id", verifyToken, async (req, res) => {
+  try {
+    await getClient();
+
+    const tutorsCollection = client
+      .db("Tutorfinder")
+      .collection("Tutors");
+
+    const { id } = req.params;
+
+    console.log("Delete ID:", id);
+
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid tutor id",
+      });
+    }
+
+
+    const result = await tutorsCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        message: "Tutor not found",
+      });
+    }
+
+
+    res.status(200).json({
+      message: "Tutor deleted successfully",
+    });
+
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
 
 
 // Add tutor
@@ -91,6 +162,19 @@ app.post("/addtutor", verifyToken, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Add booking
 app.post("/bookings", async (req, res) => {
