@@ -48,6 +48,10 @@ function getClient() {
   }
   return clientPromise;
 }
+// basic route
+app.get("/", (req, res) => {
+  res.send("Tutorfinder server is running");
+});
 
 // Get tutors
 app.get("/tutors",  async (req, res) => {
