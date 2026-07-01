@@ -70,17 +70,42 @@ app.get("/tutors",  async (req, res) => {
   }
 });
 
-// Get tutor by ID
+// Get single tutor by ID
 app.get("/tutors/:id", verifyToken, async (req, res) => {
   try {
     await getClient();
-    const tutorsCollection = client.db("Tutorfinder").collection("Tutors");
-    const tutor = await tutorsCollection.findOne({ _id: new ObjectId(req.params.id) });
-    res.json(tutor);
+
+    const tutorsCollection = client
+      .db("Tutorfinder")
+      .collection("Tutors");
+
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid tutor id",
+      });
+    }
+
+    const tutor = await tutorsCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!tutor) {
+      return res.status(404).json({
+        message: "Tutor not found",
+      });
+    }
+
+    res.status(200).json(tutor);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 });
+
 
 // Get tutors by userId;
 app.get("/tutors/user/:userId",verifyToken, async (req, res) => {
@@ -228,20 +253,8 @@ app.post("/addtutor", verifyToken, async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // Add booking
-app.post("/bookings", async (req, res) => {
+app.post("/bookings", verifyToken, async (req, res) => {
   try {
     await getClient();
     const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
@@ -252,8 +265,8 @@ app.post("/bookings", async (req, res) => {
   }
 });
 
-// get all bookings
-app.get("/bookings", async (req, res) => {
+// get all bookings 
+app.get("/bookings", verifyToken, async (req, res) => {
   try {
     await getClient();
     const bookingsCollection = client.db("Tutorfinder").collection("Bookings");
@@ -263,6 +276,14 @@ app.get("/bookings", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+
+
+
+
+
+
 
 
 
